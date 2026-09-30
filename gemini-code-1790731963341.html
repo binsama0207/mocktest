@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 문서 다운로드 시스템</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+        body {
+            background-color: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-bottom: 24px;
+            color: #333333;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 0.9rem;
+            color: #666666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+        .success-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>개인 PDF 다운로드</h2>
+    <div class="form-group">
+        <label for="userName">이름</label>
+        <input type="text" id="userName" placeholder="예: 홍길동">
+    </div>
+    <div class="form-group">
+        <label for="userBirth">생년월일 (6자리)</label>
+        <input type="text" id="userBirth" placeholder="예: 950315 (. 제외)" maxlength="6">
+    </div>
+    <button onclick="findAndDownloadPDF()">PDF 조회하기</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    // TODO: Step 2에서 배포한 구글 앱스 스크립트 웹 앱 URL을 넣으세요.
+    const GAS_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+
+    async function findAndDownloadPDF() {
+        const name = document.getElementById("userName").value.trim();
+        const birth = document.getElementById("userBirth").value.trim();
+        const resultDiv = document.getElementById("result");
+
+        resultDiv.innerHTML = "";
+        resultDiv.className = "";
+
+        if (!name || !birth) {
+            resultDiv.className = "error";
+            resultDiv.innerText = "이름과 생년월일을 모두 입력해주세요.";
+            return;
+        }
+
+        try {
+            resultDiv.innerText = "조회 중입니다...";
+
+            // 구글 앱스 스크립트 웹앱 호출 (GET 요청)
+            const requestUrl = `${GAS_WEB_APP_URL}?name=${encodeURIComponent(name)}&birth=${encodeURIComponent(birth)}`;
+            const response = await fetch(requestUrl);
+            const data = await response.json();
+
+            if (data.success) {
+                resultDiv.innerHTML = `
+                    <p><strong>${name}</strong>님의 문서가 확인되었습니다.</p>
+                    <a href="${data.downloadUrl}" class="success-btn" target="_blank">PDF 다운로드</a>
+                `;
+            } else {
+                resultDiv.className = "error";
+                resultDiv.innerText = data.message;
+            }
+        } catch (error) {
+            console.error("오류 발생:", error);
+            resultDiv.className = "error";
+            resultDiv.innerText = "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        }
+    }
+</script>
+
+</body>
+</html>
